@@ -1,0 +1,8 @@
+boto3~=1.36.22
+awscli
+pypdf
+langchain~=0.3.19
+streamlit~=1.42.1
+faiss-cpu
+numpy~=2.2.3
+langchain-community~=0.3.17
