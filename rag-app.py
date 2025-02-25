@@ -1,6 +1,3 @@
-import json
-import os
-import sys
 import boto3
 import streamlit as st
 
@@ -28,7 +25,7 @@ bedrock_embeddings = BedrockEmbeddings(model_id="amazon.titan-embed-text-v1", cl
 def data_ingestion():
     loader = PyPDFDirectoryLoader("dataFolder")
     documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=10000)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     docs = text_splitter.split_documents(documents)
     return docs
 
@@ -42,19 +39,21 @@ def vector_store(docs):
 def get_llama2_llm():
     ##create the Anthropic Model
     llm = Bedrock(model_id="meta.llama3-70b-instruct-v1:0", client=bedrock,
-                  model_kwargs={'max_gen_len': 512, 'temperature':0.5,'top_p':0.9})
+                  model_kwargs={'max_gen_len': 1000, 'temperature':0.1,'top_p':0.9})
 
     return llm
 
 prompt_template = """
 
 Human: Use the following pieces of context to provide a 
-concise answer to the question at the end but usse atleast summarize with 
+concise answer to the question at the end but use atleast summarize with 
 250 words with detailed explanations. If you don't know the answer, 
-just say that you don't know, don't try to make up an answer.
+just say that you don't know, don't try to make up an answer.Do not use knowledge
+ base outside of this policy
+ You are helpful chatbot who will help employee to know about the policies
 <context>
 {context}
-</context
+</context>
 
 Question: {question}
 
@@ -69,7 +68,7 @@ def get_response_llm(llm,vectorstore_faiss,query):
     llm=llm,
     chain_type="stuff",
     retriever=vectorstore_faiss.as_retriever(
-        search_type="similarity", search_kwargs={"k": 3}
+        search_type="similarity", search_kwargs={"k": 5}
     ),
     return_source_documents=True,
     chain_type_kwargs={"prompt": PROMPT}
